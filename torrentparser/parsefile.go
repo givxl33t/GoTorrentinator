@@ -1,4 +1,4 @@
-package torrentfile
+package torrentparser
 
 import (
 	"fmt"
@@ -35,9 +35,9 @@ func ParseTorrentFile(path string) (*TorrentFile, error) {
 		Name:        path,
 	}
 
-	err = torrentFile.AppendMetadata(bencodeTorrentData.Info)
+	err = torrentFile.AppendInfoDict(bencodeTorrentData.Info)
 	if err != nil {
-		return nil, fmt.Errorf("failed to append metadata: %w", err)
+		return nil, fmt.Errorf("failed to append info dictionary: %w", err)
 	}
 
 	return torrentFile, nil

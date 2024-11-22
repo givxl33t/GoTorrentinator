@@ -1,4 +1,4 @@
-package torrentfile
+package torrentparser
 
 import (
 	"crypto/sha1"
@@ -9,23 +9,23 @@ import (
 	"github.com/zeebo/bencode"
 )
 
-// AppendMetadata adds the metadata (aka the dictionary of a torrent file)
+// AppendInfoDict adds the metadata (aka the dictionary of a torrent file)
 // It must be called after torrentfile.New() is invoked with a magnet link
 // source with the metadata acquire from a peer in the swarm
-func (t *TorrentFile) AppendMetadata(metadata []byte) error {
+func (t *TorrentFile) AppendInfoDict(infoDictionary []byte) error {
 	var info bencodeInfo
-	err := bencode.DecodeBytes(metadata, &info)
+	err := bencode.DecodeBytes(infoDictionary, &info)
 	if err != nil {
-		return fmt.Errorf("unmarshalling metadata: %w", err)
+		return fmt.Errorf("unmarshalling infoDictionary: %w", err)
 	}
 
 	// SHA-1 hash the entire info dictionary to get the info_hash
-	t.InfoHash = sha1.Sum(metadata)
+	t.InfoHash = sha1.Sum(infoDictionary)
 
 	// split the Pieces blob into the 20-byte SHA-1 hashes for comparison later
 	const hashLen = 20
 	if len(info.Pieces)%(hashLen) != 0 {
-		return errors.New("invali length for info pieces")
+		return errors.New("invalid length for info pieces")
 	}
 	t.PieceHashes = make([][hashLen]byte, len(info.Pieces)/(hashLen))
 	for i := 0; i < len(t.PieceHashes); i++ {
