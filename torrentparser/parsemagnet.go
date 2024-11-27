@@ -8,16 +8,16 @@ import (
 )
 
 // parses a torrent magnet link
-func ParseMagnetLink(magnetLink string) (*TorrentFile, error) {
+func ParseMagnetLink(magnetLink string) (TorrentFile, error) {
 	link, err := url.Parse(magnetLink)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse magnet link: %w", err)
+		return TorrentFile{}, fmt.Errorf("failed to parse magnet link: %w", err)
 	}
 
 	// extract query parameter xt
 	xts := link.Query()["xt"]
 	if len(xts) != 1 {
-		return nil, fmt.Errorf("invalid magnet link: %s", magnetLink)
+		return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
 	}
 
 	var infoHash [20]byte
@@ -26,12 +26,12 @@ func ParseMagnetLink(magnetLink string) (*TorrentFile, error) {
 		if strings.HasPrefix(xt, "urn:btih:") {
 			encodedInfoHash := strings.TrimPrefix(xt, "urn:btih:")
 			if len(xt) != 40 {
-				return nil, fmt.Errorf("invalid magnet link: %s", magnetLink)
+				return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
 			}
 			// validates info hash format as base32
 			raw, err := base32.HexEncoding.DecodeString(encodedInfoHash)
 			if err != nil {
-				return nil, fmt.Errorf("invalid magnet link: %s", magnetLink)
+				return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
 			}
 			// copy slice from raw to infoHash
 			copy(infoHash[:], raw[:])
@@ -40,10 +40,10 @@ func ParseMagnetLink(magnetLink string) (*TorrentFile, error) {
 
 	trackerURLs := link.Query()["tr"]
 	if len(trackerURLs) != 1 {
-		return nil, fmt.Errorf("invalid magnet link: %s", magnetLink)
+		return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
 	}
 
-	return &TorrentFile{
+	return TorrentFile{
 		TrackerURLs: trackerURLs,
 		InfoHash:    infoHash,
 		Name:        link.Query().Get("dn"),

@@ -1,4 +1,4 @@
-module github.com/givxl33t/go-torrentinator
+module github.com/givxl33t/bittorrent-client-go
 
 go 1.23.1
 

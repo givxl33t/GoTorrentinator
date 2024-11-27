@@ -64,12 +64,12 @@ type bencodeInfo struct {
 //
 // If the source is a magnet link, metadata will be extracted from peers
 // already in the swarm, then added using TorrentFile.AppendMetadata()
-func New(source string) (*TorrentFile, error) {
+func New(source string) (TorrentFile, error) {
 	if strings.HasSuffix(source, ".torrent") {
 		return ParseTorrentFile(source)
 	} else if strings.HasPrefix(source, "magnet") {
 		return ParseMagnetLink(source)
 	} else {
-		return nil, fmt.Errorf("invalid source: %s", source)
+		return TorrentFile{}, fmt.Errorf("invalid source: %s", source)
 	}
 }

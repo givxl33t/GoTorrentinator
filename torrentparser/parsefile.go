@@ -8,18 +8,18 @@ import (
 )
 
 // parses a raw torrent file
-func ParseTorrentFile(path string) (*TorrentFile, error) {
-	// open torrent file
+func ParseTorrentFile(path string) (TorrentFile, error) {
+	path = os.ExpandEnv(path)
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return TorrentFile{}, err
 	}
 	defer file.Close()
 
 	// decode the top-level bencoded data
 	var bencodeTorrentData bencodeTorrent
 	if err := bencode.NewDecoder(file).Decode(&bencodeTorrentData); err != nil {
-		return nil, fmt.Errorf("failed to decode bencoded data: %w", err)
+		return TorrentFile{}, fmt.Errorf("failed to decode bencoded data: %w", err)
 	}
 
 	// collect tracker URLs
@@ -30,14 +30,14 @@ func ParseTorrentFile(path string) (*TorrentFile, error) {
 	}
 
 	// populate torrentFile struct
-	torrentFile := &TorrentFile{
+	torrentFile := TorrentFile{
 		TrackerURLs: trackerURLs,
 		Name:        path,
 	}
 
 	err = torrentFile.AppendInfoDict(bencodeTorrentData.Info)
 	if err != nil {
-		return nil, fmt.Errorf("failed to append info dictionary: %w", err)
+		return TorrentFile{}, fmt.Errorf("failed to append info dictionary: %w", err)
 	}
 
 	return torrentFile, nil
