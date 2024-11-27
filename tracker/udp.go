@@ -129,7 +129,7 @@ func (u *UDPClient) connect() error {
 func (u *UDPClient) announce() error {
 	announceMsg := make([]byte, 98)
 
-	binary.BigEndian.PutUint64(announceMsg[0:8], uint64(u.ConnectionID))
+	binary.BigEndian.PutUint64(announceMsg[0:8], u.ConnectionID)
 	binary.BigEndian.PutUint32(announceMsg[8:12], uint32(AnnounceAction))
 	transactionID := rand.Uint32()
 	binary.BigEndian.PutUint32(announceMsg[12:16], transactionID)
@@ -145,7 +145,7 @@ func (u *UDPClient) announce() error {
 
 	binary.BigEndian.PutUint32(announceMsg[88:92], rand.Uint32()) // key - for tracker statistics
 
-	neg1 := 1
+	neg1 := -1
 	binary.BigEndian.PutUint32(announceMsg[92:96], uint32(neg1))   // num_want
 	binary.BigEndian.PutUint16(announceMsg[96:98], uint16(u.Port)) // port
 

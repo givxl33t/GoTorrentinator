@@ -2,6 +2,7 @@ package torrentparser
 
 import (
 	"encoding/base32"
+	"encoding/hex"
 	"fmt"
 	"net/url"
 	"strings"
@@ -22,24 +23,31 @@ func ParseMagnetLink(magnetLink string) (TorrentFile, error) {
 
 	var infoHash [20]byte
 	for _, xt := range xts {
-		// parse xt to extract the info hash
+		// todo implement v2 btmh (multihash)
 		if strings.HasPrefix(xt, "urn:btih:") {
 			encodedInfoHash := strings.TrimPrefix(xt, "urn:btih:")
-			if len(xt) != 40 {
-				return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
+
+			switch len(encodedInfoHash) {
+			case 40:
+				raw, err := hex.DecodeString(encodedInfoHash)
+				if err != nil {
+					return TorrentFile{}, fmt.Errorf("hex decoding xt field: %w", err)
+				}
+				copy(infoHash[:], raw[:])
+			case 32:
+				raw, err := base32.HexEncoding.DecodeString(encodedInfoHash)
+				if err != nil {
+					return TorrentFile{}, fmt.Errorf("base32 decoding xt field: %w", err)
+				}
+				copy(infoHash[:], raw[:])
+			default:
+				return TorrentFile{}, fmt.Errorf("unimplemented xt field length %d", len(encodedInfoHash))
 			}
-			// validates info hash format as base32
-			raw, err := base32.HexEncoding.DecodeString(encodedInfoHash)
-			if err != nil {
-				return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
-			}
-			// copy slice from raw to infoHash
-			copy(infoHash[:], raw[:])
 		}
 	}
 
 	trackerURLs := link.Query()["tr"]
-	if len(trackerURLs) != 1 {
+	if len(trackerURLs) == 0 {
 		return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
 	}
 
