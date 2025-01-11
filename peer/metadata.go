@@ -23,9 +23,10 @@ type metadataMessage struct {
 	TotalSize int                 `bencode:"total_size,omitempty"`
 }
 
-// GetMetadata reqquests and receives the raw metadata/info dictionary from peer
+// GetMetadata requests and receives the raw metadata/info dictionary from peer
 func (p *Client) GetMetadata(infoHash [20]byte) ([]byte, error) {
 	if p.ExtensionMetadata.messageID == 0 || p.ExtensionMetadata.metadataSize == 0 {
+		// somehow the peer doesn't support the extension protocol
 		return nil, fmt.Errorf("metadata not supported by peer")
 	}
 	defer p.Conn.SetDeadline(time.Time{})

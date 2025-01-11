@@ -20,8 +20,8 @@ type Download struct {
 
 // sets up worker threads to download the torrent
 // whether it be a torrentfile or magnet links
+// parse off the infohash and tracker urls
 func NewDownload(source string) (*Download, error) {
-	// parse off the infohash and tracker urls
 	torrent, err := torrentparser.New(source)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse torrent file: %w", err)
@@ -103,7 +103,7 @@ func NewDownload(source string) (*Download, error) {
 			return nil, fmt.Errorf("failed to get metadata from any peer")
 		}
 
-		err = torrent.AppendInfoDict(metadataBytes)
+		err = torrent.AppendMetadata(metadataBytes)
 		if err != nil {
 			return nil, fmt.Errorf("failed to append metadata: %w", err)
 		}

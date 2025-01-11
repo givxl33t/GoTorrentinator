@@ -9,10 +9,10 @@ import (
 	"github.com/zeebo/bencode"
 )
 
-// AppendInfoDict adds the metadata (aka the dictionary of a torrent file)
+// AppendMetadata adds the metadata (aka the dictionary of a torrent file)
 // It must be called after torrentfile.New() is invoked with a magnet link
 // source with the metadata acquire from a peer in the swarm
-func (t *TorrentFile) AppendInfoDict(infoDictionary []byte) error {
+func (t *TorrentFile) AppendMetadata(infoDictionary []byte) error {
 	var info bencodeInfo
 	err := bencode.DecodeBytes(infoDictionary, &info)
 	if err != nil {

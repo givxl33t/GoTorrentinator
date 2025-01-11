@@ -74,7 +74,7 @@ func (p *Client) sendMessage(id messageID, payload []byte) error {
 	return nil
 }
 
-// receiveMessage readsd a message from the peer
+// receiveMessage reads a message from the peer
 func (p *Client) receiveMessage() (message, error) {
 	// receive and parse message length
 	lengthBuf := make([]byte, 4)

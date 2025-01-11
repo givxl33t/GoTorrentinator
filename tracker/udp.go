@@ -136,13 +136,11 @@ func (u *UDPClient) announce() error {
 	copy(announceMsg[16:36], u.InfoHash[:])
 	copy(announceMsg[36:56], u.PeerID[:])
 
-	binary.BigEndian.PutUint64(announceMsg[56:64], 0) // downloaded
-	binary.BigEndian.PutUint64(announceMsg[64:72], 0) // left, unknown to magnet links
-	binary.BigEndian.PutUint64(announceMsg[72:80], 0) // uploaded
-
-	binary.BigEndian.PutUint32(announceMsg[80:84], 0) // event 0:none; 1:completed; 2:started; 3:stopped
-	binary.BigEndian.PutUint32(announceMsg[84:88], 0) // IP address, default
-
+	binary.BigEndian.PutUint64(announceMsg[56:64], 0)             // downloaded
+	binary.BigEndian.PutUint64(announceMsg[64:72], 0)             // left, unknown to magnet links
+	binary.BigEndian.PutUint64(announceMsg[72:80], 0)             // uploaded
+	binary.BigEndian.PutUint32(announceMsg[80:84], 0)             // event 0:none; 1:completed; 2:started; 3:stopped
+	binary.BigEndian.PutUint32(announceMsg[84:88], 0)             // IP address, default
 	binary.BigEndian.PutUint32(announceMsg[88:92], rand.Uint32()) // key - for tracker statistics
 
 	neg1 := -1
@@ -171,7 +169,7 @@ func (u *UDPClient) announce() error {
 
 	var peers []net.TCPAddr
 	for i := 12; i < len(announceResp); i += 6 {
-		// parse 6 byes for peer's ip (4 bytes) and port (2 bytes)
+		// parse 6 bytes for peer's ip (5 bytes) and port (2 bytes)
 		peers = append(peers, net.TCPAddr{
 			IP:   net.IP(announceResp[i : i+4]),
 			Port: int(binary.BigEndian.Uint16(announceResp[i+4 : i+6])),

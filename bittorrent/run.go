@@ -8,11 +8,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/givxl33t/bittorrent-client-go/peer"
 )
 
-// pieceJob includes metadata on a single piece to be downloaded
+// pieceJob includes metadatas on a single piece to be downloaded
 type pieceJob struct {
 	Index  int
 	Length int
@@ -76,14 +77,22 @@ func (d *Download) Run(outDir string) error {
 		}
 	}
 
-	// merge results into buffer
+	// assemble pieces into a single file through buffer
 	buf := make([]byte, d.Torrent.Length)
 	for i := 0; i < len(d.Torrent.PieceHashes); i++ {
 		piece := <-results
 
 		// copy into final buffer
 		copy(buf[piece.Index*d.Torrent.PieceLength:], piece.FilePiece)
-		fmt.Printf("%0.2f%% complete\n", float64(i)/float64(len(d.Torrent.PieceHashes))*100)
+
+		// get the current date and time
+		currentTime := time.Now().Format("2006/01/02 15:04:05")
+		fmt.Printf("%s (%0.2f%%) downloaded piece #%d from %d peers\n",
+			currentTime,
+			float64(i)/float64(len(d.Torrent.PieceHashes))*100,
+			piece.Index+1,
+			len(d.PeerClients),
+		)
 	}
 
 	// close job queue

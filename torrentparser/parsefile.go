@@ -35,7 +35,7 @@ func ParseTorrentFile(path string) (TorrentFile, error) {
 		Name:        path,
 	}
 
-	err = torrentFile.AppendInfoDict(bencodeTorrentData.Info)
+	err = torrentFile.AppendMetadata(bencodeTorrentData.Info)
 	if err != nil {
 		return TorrentFile{}, fmt.Errorf("failed to append info dictionary: %w", err)
 	}
