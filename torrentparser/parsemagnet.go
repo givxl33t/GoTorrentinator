@@ -35,7 +35,7 @@ func ParseMagnetLink(magnetLink string) (TorrentFile, error) {
 				}
 				copy(infoHash[:], raw[:])
 			case 32:
-				raw, err := base32.HexEncoding.DecodeString(encodedInfoHash)
+				raw, err := base32.StdEncoding.DecodeString(encodedInfoHash)
 				if err != nil {
 					return TorrentFile{}, fmt.Errorf("base32 decoding xt field: %w", err)
 				}
