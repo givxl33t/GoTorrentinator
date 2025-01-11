@@ -10,35 +10,34 @@ import (
 // parses a raw torrent file
 func ParseTorrentFile(path string) (TorrentFile, error) {
 	path = os.ExpandEnv(path)
-	file, err := os.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return TorrentFile{}, err
 	}
-	defer file.Close()
 
-	// decode the top-level bencoded data
-	var bencodeTorrentData bencodeTorrent
-	if err := bencode.NewDecoder(file).Decode(&bencodeTorrentData); err != nil {
-		return TorrentFile{}, fmt.Errorf("failed to decode bencoded data: %w", err)
+	var btor bencodeTorrent
+	err = bencode.NewDecoder(f).Decode(&btor)
+	if err != nil {
+		return TorrentFile{}, fmt.Errorf("unmarshalling file: %w", err)
 	}
 
-	// collect tracker URLs
 	var trackerURLs []string
-	trackerURLs = append(trackerURLs, bencodeTorrentData.Announce)
-	for _, announceList := range bencodeTorrentData.AnnounceList {
-		trackerURLs = append(trackerURLs, announceList...)
+	for _, list := range btor.AnnounceList {
+		trackerURLs = append(trackerURLs, list...)
 	}
-
-	// populate torrentFile struct
-	torrentFile := TorrentFile{
+	// BEP0012, only use `announce` if `announce-list` is not present
+	if len(trackerURLs) == 0 {
+		trackerURLs = append(trackerURLs, btor.Announce)
+	}
+	tf := TorrentFile{
 		TrackerURLs: trackerURLs,
 		Name:        path,
 	}
 
-	err = torrentFile.AppendMetadata(bencodeTorrentData.Info)
+	err = tf.AppendMetadata(btor.Info)
 	if err != nil {
-		return TorrentFile{}, fmt.Errorf("failed to append info dictionary: %w", err)
+		return TorrentFile{}, fmt.Errorf("parsing metadata: %w", err)
 	}
 
-	return torrentFile, nil
+	return tf, nil
 }

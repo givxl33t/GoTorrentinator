@@ -11,7 +11,7 @@ import (
 type extendedHandshake struct {
 	M struct {
 		// value doubles as the extended message ID for metadata requests
-		Metadata int `bencode:"m"`
+		Metadata int `bencode:"ut_metadata"`
 	} `bencode:"m"`
 	MetadataSize int `bencode:"metadata_size"`
 }

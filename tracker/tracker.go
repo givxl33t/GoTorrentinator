@@ -39,7 +39,7 @@ type compactHTTPTrackerResponse struct {
 // a verbose HTTP tracker response
 type httpTrackerResponse struct {
 	Peers []struct {
-		ID   string `bencode:"peer id"`
+		ID   string `bencode:"peer_id"`
 		IP   string `bencode:"ip"`
 		Port int    `bencode:"port"`
 	} `bencode:"peers"`

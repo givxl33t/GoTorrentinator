@@ -76,45 +76,47 @@ func (p *Client) sendMessage(id messageID, payload []byte) error {
 
 // receiveMessage reads a message from the peer
 func (p *Client) receiveMessage() (message, error) {
-	// receive and parse message length
+	// Receive and parse the message <length><id><payload>
+	// 4 bytes that represent the length of the rest of the message
 	lengthBuf := make([]byte, 4)
 	_, err := io.ReadFull(p.Conn, lengthBuf)
 	if err != nil {
 		return message{ID: msgUnknown}, fmt.Errorf("reading message length: %w", err)
 	}
 
-	messageLength := binary.BigEndian.Uint32(lengthBuf)
-	if messageLength == 0 {
+	msgLength := binary.BigEndian.Uint32(lengthBuf)
+	if msgLength == 0 {
 		// keep-alive message
 		return message{ID: msgKeepAlive}, nil
 	}
 
-	// buffer to contain the rest of the message, 1 byte for the id, rest for payload
-	messageBuf := make([]byte, messageLength)
+	// buffer to contain the rest of the message, 1 byte for the messageID, the
+	// rest for the payload
+	messageBuf := make([]byte, msgLength)
 	_, err = io.ReadFull(p.Conn, messageBuf)
 	if err != nil {
-		return message{ID: msgUnknown}, fmt.Errorf("reading message: %w", err)
+		return message{ID: msgUnknown}, fmt.Errorf("reading message payload: %w", err)
 	}
 	msgID := messageID(messageBuf[0])
-	msgPayload := messageBuf[1:]
+	messagePayload := messageBuf[1:]
 
-	// apply sidde effects
+	// apply side effects to client if applicable
 	switch msgID {
-	case msgHave:
-		index := binary.BigEndian.Uint32(msgPayload)
-		p.Bitfield.SetPiece(int(index))
 	case msgChoke:
 		p.Choked = true
 	case msgUnchoke:
 		p.Choked = false
+	case msgHave:
+		index := binary.BigEndian.Uint32(messagePayload)
+		p.Bitfield.SetPiece(int(index))
 	case msgBitfield:
-		p.Bitfield = bitfield(msgPayload)
+		p.Bitfield = bitfield(messagePayload)
 	case msgPort:
-		p.DHTPort = int(binary.BigEndian.Uint16(msgPayload))
+		p.DHTPort = int(binary.BigEndian.Uint16(messagePayload))
 	}
 
 	return message{
 		ID:      msgID,
-		Payload: msgPayload,
+		Payload: messagePayload,
 	}, nil
 }

@@ -33,29 +33,30 @@ type File struct {
 	MD5Hash  string
 }
 
+// serialization struct the represents the structure of a .torrent file
+// it is not immediately usable, so it can be converted to a TorrentFile struct
 type bencodeTorrent struct {
 	// URL of tracker server to get peers from
 	Announce     string     `bencode:"announce"`
 	AnnounceList [][]string `bencode:"announce-list"`
-	// info is parsed as a RawMessage to ensure that the final info_hash is
-	// correct even in the case of the info being a dictionary
+	// Info is parsed as a RawMessage to ensure that the final info_hash is
+	// correct even in the case of the info dictionary being an unexpected shape
 	Info bencode.RawMessage `bencode:"info"`
 }
 
 // Only Length OR Files will be present per BEP0003
 // spec: http://bittorrent.org/beps/bep_0003.html#info-dictionary
 type bencodeInfo struct {
-	Pieces      []byte `bencode:"pieces"`           // binary blob of all SHA1 hashes of each piece
-	PieceLength int    `bencode:"piece length"`     // length in bytes of each piece (must be a power of 2)
-	Name        string `bencode:"name"`             // Name of file (or folder if there are multiple files)
-	Length      int    `bencode:"length,omitempty"` // Total length of the file (only for single-file torrents)
+	Pieces      string `bencode:"pieces"`       // binary blob of all SHA1 hash of each piece
+	PieceLength int    `bencode:"piece length"` // length in bytes of each piece
+	Name        string `bencode:"name"`         // Name of file (or folder if there are multiple files)
+	Length      int    `bencode:"length"`       // total length of file (in single file case)
 	Files       []struct {
-		Length int      `bencode:"length"` // Length of this file in bytes
-		Path   []string `bencode:"path"`   // List of subdirectories; last element is file name
-		// Optional fields (custom, not part of BEP0003)
-		SHA1Hash string `bencode:"sha1,omitempty"` // Optional: SHA1 hash for this file
-		MD5Hash  string `bencode:"md5,omitempty"`  // Optional: MD5 hash for this file
-	} `bencode:"files,omitempty"` // Present only for multi-file torrents
+		Length   int      `bencode:"length"` // length of this file
+		Path     []string `bencode:"path"`   // list of subdirectories, last element is file name
+		SHA1Hash string   `bencode:"sha1"`   // optional, to validate this file
+		MD5Hash  string   `bencode:"md5"`    // optional, to validate this file
+	} `bencode:"files"`
 }
 
 // New returns a new TorrentFile

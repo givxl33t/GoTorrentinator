@@ -1,6 +1,7 @@
 package torrentparser
 
 import (
+	"bytes"
 	"encoding/base32"
 	"encoding/hex"
 	"fmt"
@@ -10,15 +11,14 @@ import (
 
 // parses a torrent magnet link
 func ParseMagnetLink(magnetLink string) (TorrentFile, error) {
-	link, err := url.Parse(magnetLink)
+	u, err := url.Parse(magnetLink)
 	if err != nil {
-		return TorrentFile{}, fmt.Errorf("failed to parse magnet link: %w", err)
+		return TorrentFile{}, fmt.Errorf("error parsing magnet link: %v", err)
 	}
 
-	// extract query parameter xt
-	xts := link.Query()["xt"]
-	if len(xts) != 1 {
-		return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
+	xts := u.Query()["xt"]
+	if len(xts) == 0 {
+		return TorrentFile{}, fmt.Errorf("missing `xt` field on magnet link")
 	}
 
 	var infoHash [20]byte
@@ -46,14 +46,18 @@ func ParseMagnetLink(magnetLink string) (TorrentFile, error) {
 		}
 	}
 
-	trackerURLs := link.Query()["tr"]
-	if len(trackerURLs) == 0 {
-		return TorrentFile{}, fmt.Errorf("invalid magnet link: %s", magnetLink)
+	if bytes.Equal(infoHash[:], make([]byte, 20)) {
+		return TorrentFile{}, fmt.Errorf("no xt field found, btmh unimplemented")
+	}
+
+	trs := u.Query()["tr"]
+	if len(trs) == 0 {
+		return TorrentFile{}, fmt.Errorf("no tracker urls in magnet link, DHT/PEX unimplemented")
 	}
 
 	return TorrentFile{
-		TrackerURLs: trackerURLs,
 		InfoHash:    infoHash,
-		Name:        link.Query().Get("dn"),
+		TrackerURLs: trs,
+		Name:        u.Query().Get("dn"),
 	}, nil
 }
